@@ -3,6 +3,15 @@ const User = require("../models/User");
 const CryptoJS = require("crypto-js");
 const jwt = require("jsonwebtoken");
 
+const allusers = async (req, res) => {
+  try {
+    const users = await User.find({});
+
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 //REGISTER
 router.post("/register", async (req, res) => {
   const newUser = new User({
@@ -24,11 +33,9 @@ router.post("/register", async (req, res) => {
 //LOGIN
 
 router.post("/login", async (req, res) => {
-  debugger;
   try {
     const user = await User.findOne({ username: req.body.username });
-
-    !user && res.status(401).json("Wrong Credentials");
+    if (!user) return res.status(401).json("Wrong Credentials");
 
     const hashedPasword = CryptoJS.AES.decrypt(
       user.password,
@@ -37,8 +44,8 @@ router.post("/login", async (req, res) => {
 
     const OrginalPassword = hashedPasword.toString(CryptoJS.enc.Utf8);
 
-    OrginalPassword !== req.body.password &&
-      res.status(401).json("Wrong Credentials");
+    if (OrginalPassword !== req.body.password)
+      return res.status(401).json("Wrong Credentials");
 
     const accessToken = jwt.sign(
       {
@@ -57,4 +64,11 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.get("/get-all-users", async (req, res) => {
+  try {
+    allusers(req, res);
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 module.exports = router;

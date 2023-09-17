@@ -3,14 +3,20 @@ const Note = require("../models/note");
 const { verifyToken } = require("./verifyToken");
 
 // Get all notes
-router.get("/get-all-notes", async (req, res) => {
+
+const getNotes = async (userId, res) => {
   try {
-    const notes = await Note.find({});
+    const notes = await Note.find({ userId: userId }).sort({ createdAt: -1 });
 
     res.json(notes);
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }
+};
+
+router.get("/get-all-notes/:id", async (req, res) => {
+  const userId = req.params.id;
+  await getNotes(userId, res);
 });
 
 router.post("/add-note", verifyToken, async (req, res) => {
@@ -24,7 +30,7 @@ router.post("/add-note", verifyToken, async (req, res) => {
     const newNote = new Note({ userId, title, note });
     const savedNote = await newNote.save();
 
-    res.status(201).json(savedNote);
+    await getNotes(userId, res);
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }
@@ -49,22 +55,22 @@ router.put("/edit-note/:id", verifyToken, async (req, res) => {
       return res.status(404).json({ message: "Note not found." });
     }
 
-    res.json(updatedNote);
+    await getNotes(userId, res);
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }
 });
-router.delete("/delete-note/:id", async (req, res) => {
+router.delete("/delete-note/:noteId/:userId", async (req, res) => {
   try {
-    const noteId = req.params.id;
+    const noteId = req.params.noteId;
+    const userId = req.params.userId;
 
     const deletedNote = await Note.findByIdAndDelete(noteId);
 
     if (!deletedNote) {
       return res.status(404).json({ message: "Note not found." });
     }
-
-    res.json({ message: "Note deleted successfully." });
+    await getNotes(userId, res);
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }

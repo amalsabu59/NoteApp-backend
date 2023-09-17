@@ -6,7 +6,7 @@ const dotenv = require("dotenv");
 const authRoutes = require("./routes/auth");
 const noteRoutes = require("./routes/note");
 const sharedNoteRoutes = require("./routes/sharedNote");
-const userRoutes = require("./routes/user");
+
 dotenv.config();
 app.use(express.json());
 app.use(cors());
@@ -14,7 +14,6 @@ app.use(cors());
 app.use("/auth", authRoutes);
 app.use("/note", noteRoutes);
 app.use("/shared-note", sharedNoteRoutes);
-app.use("/user", userRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI)
